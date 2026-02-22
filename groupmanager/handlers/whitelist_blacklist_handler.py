@@ -8,8 +8,8 @@ from typing import Optional
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger
 
-from groupadminer.core import Config, Storage
-from groupadminer.utils import MessageBuilder, is_admin
+from groupmanager.core import Config, Storage
+from groupmanager.utils import MessageBuilder, is_admin
 
 
 class WhitelistBlacklistHandler:
@@ -61,7 +61,7 @@ class WhitelistBlacklistHandler:
             # 记录日志
             if self.config.enable_logging:
                 logger.info(
-                    f"[GroupAdminer] 群 {group_id} 添加白名单: "
+                    f"[GroupManager] 群 {group_id} 添加白名单: "
                     f"用户ID={user_id}, 操作者={event.get_sender_id()}"
                 )
 
@@ -106,7 +106,7 @@ class WhitelistBlacklistHandler:
             # 记录日志
             if self.config.enable_logging:
                 logger.info(
-                    f"[GroupAdminer] 群 {group_id} 移除白名单: "
+                    f"[GroupManager] 群 {group_id} 移除白名单: "
                     f"用户ID={user_id}, 操作者={event.get_sender_id()}"
                 )
 
@@ -170,7 +170,7 @@ class WhitelistBlacklistHandler:
             # 记录日志
             if self.config.enable_logging:
                 logger.info(
-                    f"[GroupAdminer] 群 {group_id} 添加黑名单: "
+                    f"[GroupManager] 群 {group_id} 添加黑名单: "
                     f"用户ID={user_id}, 操作者={event.get_sender_id()}"
                 )
 
@@ -215,7 +215,7 @@ class WhitelistBlacklistHandler:
             # 记录日志
             if self.config.enable_logging:
                 logger.info(
-                    f"[GroupAdminer] 群 {group_id} 移除黑名单: "
+                    f"[GroupManager] 群 {group_id} 移除黑名单: "
                     f"用户ID={user_id}, 操作者={event.get_sender_id()}"
                 )
 

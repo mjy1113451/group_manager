@@ -1,5 +1,5 @@
 """
-GroupAdminer - 智能群管理插件
+GroupManager - 智能群管理插件
 
 一个强大的 AstrBot 群管理插件，支持通过正则表达式、关键词、
 白名单和黑名单验证加群申请。
@@ -13,19 +13,19 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 
-from groupadminer.core import Config, Storage, Validator
-from groupadminer.handlers import RuleHandler, WhitelistBlacklistHandler, GroupJoinRequestHandler
-from groupadminer.utils import MessageBuilder, NotificationManager
+from groupmanager.core import Config, Storage, Validator
+from groupmanager.handlers import RuleHandler, WhitelistBlacklistHandler
+from groupmanager.utils import MessageBuilder
 
 
 @register(
-    "groupAdminer",
+    "groupManager",
     "Kush-ShuL",
     "智能群管理插件 - 支持正则表达式/关键词/白名单/黑名单验证加群申请",
     "v1.0.0"
 )
-class GroupAdminer(Star):
-    """GroupAdminer 插件主类"""
+class GroupManager(Star):
+    """GroupManager 插件主类"""
 
     def __init__(self, context: Context):
         """
@@ -44,146 +44,142 @@ class GroupAdminer(Star):
         # 初始化处理器
         self.rule_handler = RuleHandler(self, self.config, self.storage, self.validator)
         self.wb_handler = WhitelistBlacklistHandler(self, self.config, self.storage)
-        self.notification_manager = NotificationManager(self, self.config)
-        self.join_request_handler = GroupJoinRequestHandler(
-            self, self.config, self.storage, self.validator, self.notification_manager
-        )
 
-        logger.info("[GroupAdminer] 插件已加载")
+        logger.info("[GroupManager] 插件已加载")
 
     async def initialize(self):
         """插件初始化"""
-        logger.info("[GroupAdminer] 插件初始化完成")
+        logger.info("[GroupManager] 插件初始化完成")
 
     async def terminate(self):
         """插件销毁"""
-        logger.info("[GroupAdminer] 插件已卸载")
+        logger.info("[GroupManager] 插件已卸载")
 
     # ==================== 指令组 ====================
 
-    @filter.command_group("ga")
-    async def ga(self):
+    @filter.command_group("gm")
+    async def gm(self):
         """群管理器指令组"""
         pass
 
     # ==================== 规则管理指令 ====================
 
-    @ga.command("add")
-    async def ga_add(self, event: AstrMessageEvent, pattern: str = None):
+    @gm.command("add")
+    async def gm_add(self, event: AstrMessageEvent, pattern: str = None):
         """
         添加关键词/正则表达式规则
-        用法: /ga add [关键词|正则表达式]
+        用法: /gm add [关键词|正则表达式]
         """
         async for result in self.rule_handler.add_rule(event, pattern):
             yield result
 
-    @ga.command("remove")
-    async def ga_remove(self, event: AstrMessageEvent, index: int = None):
+    @gm.command("remove")
+    async def gm_remove(self, event: AstrMessageEvent, index: int = None):
         """
         删除指定索引的规则
-        用法: /ga remove [索引]
+        用法: /gm remove [索引]
         """
         async for result in self.rule_handler.remove_rule(event, index):
             yield result
 
-    @ga.command("list")
-    async def ga_list(self, event: AstrMessageEvent):
+    @gm.command("list")
+    async def gm_list(self, event: AstrMessageEvent):
         """
         查看当前群的所有规则
-        用法: /ga list
+        用法: /gm list
         """
         async for result in self.rule_handler.list_rules(event):
             yield result
 
-    @ga.command("clear")
-    async def ga_clear(self, event: AstrMessageEvent):
+    @gm.command("clear")
+    async def gm_clear(self, event: AstrMessageEvent):
         """
         清空当前群的所有规则
-        用法: /ga clear
+        用法: /gm clear
         """
         async for result in self.rule_handler.clear_rules(event):
             yield result
 
-    @ga.command("test")
-    async def ga_test(self, event: AstrMessageEvent, test_text: str = None):
+    @gm.command("test")
+    async def gm_test(self, event: AstrMessageEvent, test_text: str = None):
         """
         测试文本是否匹配当前群的规则
-        用法: /ga test [测试文本]
+        用法: /gm test [测试文本]
         """
         async for result in self.rule_handler.test_rule(event, test_text):
             yield result
 
     # ==================== 白名单指令 ====================
 
-    @ga.group("whitelist")
-    async def ga_whitelist(self):
+    @gm.group("whitelist")
+    async def gm_whitelist(self):
         """白名单管理指令组"""
         pass
 
-    @ga_whitelist.command("add")
-    async def ga_whitelist_add(self, event: AstrMessageEvent, user_id: str = None):
+    @gm_whitelist.command("add")
+    async def gm_whitelist_add(self, event: AstrMessageEvent, user_id: str = None):
         """
         添加用户到白名单
-        用法: /ga whitelist add [用户ID]
+        用法: /gm whitelist add [用户ID]
         """
         async for result in self.wb_handler.whitelist_add(event, user_id):
             yield result
 
-    @ga_whitelist.command("remove")
-    async def ga_whitelist_remove(self, event: AstrMessageEvent, user_id: str = None):
+    @gm_whitelist.command("remove")
+    async def gm_whitelist_remove(self, event: AstrMessageEvent, user_id: str = None):
         """
         从白名单移除用户
-        用法: /ga whitelist remove [用户ID]
+        用法: /gm whitelist remove [用户ID]
         """
         async for result in self.wb_handler.whitelist_remove(event, user_id):
             yield result
 
-    @ga_whitelist.command("list")
-    async def ga_whitelist_list(self, event: AstrMessageEvent):
+    @gm_whitelist.command("list")
+    async def gm_whitelist_list(self, event: AstrMessageEvent):
         """
         查看白名单
-        用法: /ga whitelist list
+        用法: /gm whitelist list
         """
         async for result in self.wb_handler.whitelist_list(event):
             yield result
 
     # ==================== 黑名单指令 ====================
 
-    @ga.group("blacklist")
-    async def ga_blacklist(self):
+    @gm.group("blacklist")
+    async def gm_blacklist(self):
         """黑名单管理指令组"""
         pass
 
-    @ga_blacklist.command("add")
-    async def ga_blacklist_add(self, event: AstrMessageEvent, user_id: str = None):
+    @gm_blacklist.command("add")
+    async def gm_blacklist_add(self, event: AstrMessageEvent, user_id: str = None):
         """
         添加用户到黑名单
-        用法: /ga blacklist add [用户ID]
+        用法: /gm blacklist add [用户ID]
         """
         async for result in self.wb_handler.blacklist_add(event, user_id):
             yield result
 
-    @ga_blacklist.command("remove")
-    async def ga_blacklist_remove(self, event: AstrMessageEvent, user_id: str = None):
+    @gm_blacklist.command("remove")
+    async def gm_blacklist_remove(self, event: AstrMessageEvent, user_id: str = None):
         """
         从黑名单移除用户
-        用法: /ga blacklist remove [用户ID]
+        用法: /gm blacklist remove [用户ID]
         """
         async for result in self.wb_handler.blacklist_remove(event, user_id):
             yield result
 
-    @ga_blacklist.command("list")
-    async def ga_blacklist_list(self, event: AstrMessageEvent):
+    @gm_blacklist.command("list")
+    async def gm_blacklist_list(self, event: AstrMessageEvent):
         """
         查看黑名单
-        用法: /ga blacklist list
+        用法: /gm blacklist list
         """
         async for result in self.wb_handler.blacklist_list(event):
             yield result
 
     # ==================== 帮助指令 ====================
 
-    @ga.command("help", alias={"帮助"})
+    @gm.command("help", alias={"帮助"})
     async def ga_help(self, event: AstrMessageEvent):
         """
         显示帮助信息

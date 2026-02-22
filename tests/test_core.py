@@ -1,11 +1,11 @@
 """
-GroupAdminer 插件测试
+GroupManager 插件测试
 
 测试插件的核心功能。
 """
 
 import pytest
-from groupadminer.core import Config, Validator, RuleType, ValidationResult
+from groupmanager.core import Config, Validator, RuleType, ValidationResult
 
 
 class TestValidator:

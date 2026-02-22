@@ -9,7 +9,7 @@ from astrbot.api.event import AstrMessageEvent
 from astrbot.api.star import Star
 from astrbot.api import logger
 
-from groupadminer.core import Config, ValidationResult
+from groupmanager.core import Config, ValidationResult
 
 
 class NotificationManager:
@@ -62,7 +62,7 @@ class NotificationManager:
 
         # 如果没有配置管理员列表，则不发送通知
         if not admin_list:
-            logger.info("[GroupAdminer] 未配置管理员列表，跳过通知")
+            logger.info("[GroupManager] 未配置管理员列表，跳过通知")
             return False
 
         # 构建通知消息
@@ -85,11 +85,11 @@ class NotificationManager:
 
                 if self.config.enable_logging:
                     logger.info(
-                        f"[GroupAdminer] 已发送通知给管理员 {admin_id}: "
+                        f"[GroupManager] 已发送通知给管理员 {admin_id}: "
                         f"群={group_name}, 用户={user_name}({user_id}), 结果={result.value}"
                     )
             except Exception as e:
-                logger.error(f"[GroupAdminer] 发送通知给管理员 {admin_id} 失败: {str(e)}")
+                logger.error(f"[GroupManager] 发送通知给管理员 {admin_id} 失败: {str(e)}")
 
         return success_count > 0
 

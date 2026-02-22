@@ -8,8 +8,8 @@ from typing import Optional
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger
 
-from groupadminer.core import Config, Storage, Validator, RuleType
-from groupadminer.utils import MessageBuilder, is_admin
+from groupmanager.core import Config, Storage, Validator, RuleType
+from groupmanager.utils import MessageBuilder, is_admin
 
 
 class RuleHandler:
@@ -92,7 +92,7 @@ class RuleHandler:
         # 记录日志
         if self.config.enable_logging:
             logger.info(
-                f"[GroupAdminer] 群 {group_id} 添加规则: "
+                f"[GroupManager] 群 {group_id} 添加规则: "
                 f"类型={pattern_type.value}, 内容={content}, "
                 f"操作者={event.get_sender_id()}"
             )
@@ -156,7 +156,7 @@ class RuleHandler:
         # 记录日志
         if self.config.enable_logging:
             logger.info(
-                f"[GroupAdminer] 群 {group_id} 删除规则: "
+                f"[GroupManager] 群 {group_id} 删除规则: "
                 f"类型={removed_rule['type']}, 内容={removed_rule['content']}, "
                 f"操作者={event.get_sender_id()}"
             )
@@ -227,7 +227,7 @@ class RuleHandler:
         # 记录日志
         if self.config.enable_logging:
             logger.info(
-                f"[GroupAdminer] 群 {group_id} 清空所有规则, "
+                f"[GroupManager] 群 {group_id} 清空所有规则, "
                 f"共删除 {len(group_rules)} 条规则, 操作者={event.get_sender_id()}"
             )
 

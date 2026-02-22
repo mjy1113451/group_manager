@@ -8,8 +8,8 @@ from typing import Optional, List
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger
 
-from groupadminer.core import Config, Storage, Validator, ValidationResult
-from groupadminer.utils import NotificationManager
+from groupmanager.core import Config, Storage, Validator, ValidationResult
+from groupmanager.utils import NotificationManager
 
 
 class GroupJoinRequestHandler:
@@ -81,7 +81,7 @@ class GroupJoinRequestHandler:
         # 记录日志
         if self.config.enable_logging:
             logger.info(
-                f"[GroupAdminer] 加群申请验证: "
+                f"[GroupManager] 加群申请验证: "
                 f"群={group_name}({group_id}), "
                 f"用户={user_name}({user_id}), "
                 f"理由={reason}, "

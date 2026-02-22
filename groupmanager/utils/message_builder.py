@@ -109,7 +109,7 @@ class MessageBuilder:
             message_parts.append("-" * 40 + "\n")
 
         message_parts.append(f"📊 总计: {len(rules)} 条规则")
-        message_parts.append(f"\n💡 使用 /ga remove [索引] 删除规则")
+        message_parts.append(f"\n💡 使用 /gm remove [索引] 删除规则")
 
         return "".join(message_parts)
 
@@ -214,61 +214,56 @@ class MessageBuilder:
         Returns:
             格式化后的帮助消息
         """
-        return """🤖 GroupAdminer 群管理器帮助
+        return """🤖 GroupManager 群管理器帮助
 
 📌 功能介绍
-本插件支持通过关键词、正则表达式、白名单和黑名单验证加群申请，
-并可通知管理员处理加群申请。
+本插件支持通过关键词、正则表达式、白名单和黑名单验证加群申请。
 
 💻 指令列表
 
-🔧 /ga add [关键词|正则表达式]
+🔧 /gm add [关键词|正则表达式]
    添加关键词或正则表达式规则
    示例:
-   - /ga add 学生
-   - /ga add /\\d{11}/  (手机号正则)
+   - /gm add 学生
+   - /gm add /\\d{11}/  (手机号正则)
 
-🔨 /ga remove [索引]
+🔨 /gm remove [索引]
    删除指定索引的规则
-   示例: /ga remove 1
+   示例: /gm remove 1
 
-📋 /ga list
+📋 /gm list
    查看当前群的所有规则
 
-🗑️ /ga clear
+🗑️ /gm clear
    清空当前群的所有规则
 
-🧪 /ga test [测试文本]
+🧪 /gm test [测试文本]
    测试文本是否匹配规则
-   示例: /ga test 我是学生
+   示例: /gm test 我是学生
 
-🧪 /ga test_join [用户ID] [申请理由]
-   测试加群申请（模拟收到加群申请）
-   示例: /ga test_join 123456 我是学生
-
-⚪ /ga whitelist add [用户ID]
+⚪ /gm whitelist add [用户ID]
    添加用户到白名单
-   示例: /ga whitelist add 123456
+   示例: /gm whitelist add 123456
 
-⚫ /ga blacklist add [用户ID]
+⚫ /gm blacklist add [用户ID]
    添加用户到黑名单
-   示例: /ga blacklist add 123456
+   示例: /gm blacklist add 123456
 
-⚪ /ga whitelist remove [用户ID]
+⚪ /gm whitelist remove [用户ID]
    从白名单移除用户
-   示例: /ga whitelist remove 123456
+   示例: /gm whitelist remove 123456
 
-⚫ /ga blacklist remove [用户ID]
+⚫ /gm blacklist remove [用户ID]
    从黑名单移除用户
-   示例: /ga blacklist remove 123456
+   示例: /gm blacklist remove 123456
 
-📋 /ga whitelist list
+📋 /gm whitelist list
    查看白名单
 
-📋 /ga blacklist list
+📋 /gm blacklist list
    查看黑名单
 
-❓ /ga help
+❓ /gm help
    显示此帮助信息
 
 💡 使用提示
@@ -278,7 +273,6 @@ class MessageBuilder:
 - 黑名单优先级次之，黑名单用户直接拒绝
 - 只有管理员可以添加/删除规则和白名单/黑名单
 - 所有成员都可以查看和测试规则
-- 收到加群申请时会通知配置的管理员
 
 📚 正则表达式示例
 - 手机号: /\\d{11}/
@@ -288,4 +282,5 @@ class MessageBuilder:
 - 身份证: /\\d{17}[\\dXx]/
 
 ⚙️ 开发者: Kush-ShuL
-🔗 项目: https://github.com/Kush-ShuL/GroupAdminer"""
+🔗 项目: https://github.com/Kush-ShuL/GroupManager"""
+
