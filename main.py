@@ -1,239 +1,253 @@
-# 文件路径：data/plugins/your_plugin_name/main.py
-# 请根据实际插件目录修改 your_plugin_name
+"""
+GroupAdminer - 智能群管理插件
+
+一个强大的 AstrBot 群管理插件，支持通过正则表达式、关键词、
+白名单和黑名单验证加群申请。
+
+Author: Kush-ShuL
+Version: v1.0.0
+License: AGPL-v3
+"""
 
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
-from typing import List, Optional
-import asyncio
+from astrbot.api import logger
 
-@register("group_join_approver", "YourName", "自动审核与通知群申请插件", "1.0.0")
-class GroupJoinApprover(Star):
+from groupadminer.core import Config, Storage, Validator
+from groupadminer.handlers import RuleHandler, WhitelistBlacklistHandler, GroupJoinRequestHandler
+from groupadminer.utils import MessageBuilder, NotificationManager
+
+
+@register(
+    "groupAdminer",
+    "Kush-ShuL",
+    "智能群管理插件 - 支持正则表达式/关键词/白名单/黑名单验证加群申请",
+    "v1.0.0"
+)
+class GroupAdminer(Star):
+    """GroupAdminer 插件主类"""
+
     def __init__(self, context: Context):
+        """
+        初始化插件
+
+        Args:
+            context: AstrBot 上下文对象
+        """
         super().__init__(context)
-        self._metadata = self._get_metadata()
-        self._keywords: List[str] = self._load_keywords()
-        self._admin_user_ids: List[str] = self._load_admin_users()
-        self._pending_requests = {}  # 用于缓存未处理的申请信息
 
-    def _get_metadata(self):
-        """从metadata.yaml加载插件元数据"""
-        # 这里简化处理，实际应从metadata.yaml读取
-        # metadata.yaml文件应位于插件根目录
-        return {
-            "name": "group_join_approver",
-            "author": "YourName",
-            "description": "自动审核与通知群申请插件",
-            "version": "1.0.0"
-        }
+        # 初始化核心组件
+        self.config = Config(self.get_config())
+        self.storage = Storage(self)
+        self.validator = Validator()
 
-    def _load_keywords(self) -> List[str]:
-        """加载审核关键词列表"""
-        # 在实际插件中，应从配置文件或数据库加载
-        # 这里使用示例关键词
-        return ["面试", "求职", "项目合作", "技术交流"]
-
-    def _load_admin_users(self) -> List[str]:
-        """加载管理员用户ID列表"""
-        # 在实际插件中，应从配置文件或数据库加载
-        # 这里使用示例用户ID
-        return ["12345678", "87654321"]  # 替换为实际的管理员用户ID
-
-    @filter.event_message_type(filter.EventMessageType.GROUP_REQUEST)
-    async def on_group_request(self, event: AstrMessageEvent):
-        """
-        监听群申请事件
-        EventMessageType.GROUP_REQUEST 为群申请事件类型
-        """
-        request_info = self._extract_request_info(event)
-        if not request_info:
-            return
-
-        request_id = request_info.get("request_id", "")
-        group_id = request_info.get("group_id", "")
-        user_id = request_info.get("user_id", "")
-        user_name = request_info.get("user_name", "未知用户")
-        request_reason = request_info.get("reason", "")
-
-        # 缓存申请信息以便后续处理
-        self._pending_requests[request_id] = request_info
-
-        # 检查申请理由是否包含关键词
-        matched_keyword = self._check_keywords(request_reason)
-
-        if matched_keyword:
-            # 匹配关键词，自动同意申请
-            success = await self._approve_request(group_id, user_id, request_id)
-            if success:
-                log_message = f"已自动同意 {user_name}({user_id}) 的入群申请。匹配关键词: {matched_keyword}"
-                self._log_action(log_message, event)
-                # 可选：向申请人发送成功通知
-                await self._notify_applicant(user_id, "您的入群申请已自动通过审核。", event)
-        else:
-            # 未匹配关键词，通知管理员审核
-            await self._notify_admins(request_info, event)
-            log_message = f"已将 {user_name}({user_id}) 的入群申请转交人工审核。申请理由: {request_reason}"
-            self._log_action(log_message, event)
-
-    def _extract_request_info(self, event: AstrMessageEvent) -> dict:
-        """
-        从事件对象中提取申请信息
-        注意：不同平台适配器的具体字段可能不同，需根据实际情况调整
-        """
-        try:
-            message_obj = event.message_obj
-            raw_message = getattr(message_obj, 'raw_message', {})
-
-            # 根据平台适配器类型提取不同字段
-            # 这里以OneBot v11为例，其他平台需调整
-            if hasattr(raw_message, 'request_type'):
-                # OneBot v11的群申请格式
-                return {
-                    "request_id": raw_message.get("request_id", ""),
-                    "group_id": raw_message.get("group_id", ""),
-                    "user_id": raw_message.get("user_id", ""),
-                    "user_name": raw_message.get("user_name", ""),
-                    "reason": raw_message.get("comment", "")
-                }
-            else:
-                # 通用格式尝试
-                return {
-                    "request_id": getattr(raw_message, 'request_id', ''),
-                    "group_id": getattr(raw_message, 'group_id', ''),
-                    "user_id": getattr(raw_message, 'user_id', ''),
-                    "user_name": event.get_sender_name(),
-                    "reason": event.message_str
-                }
-        except Exception as e:
-            self._log_action(f"提取申请信息失败: {str(e)}", event)
-            return {}
-
-    def _check_keywords(self, text: str) -> Optional[str]:
-        """检查文本是否包含关键词，返回匹配到的关键词"""
-        if not text:
-            return None
-
-        text_lower = text.lower()
-        for keyword in self._keywords:
-            if keyword.lower() in text_lower:
-                return keyword
-        return None
-
-    async def _approve_request(self, group_id: str, user_id: str, request_id: str) -> bool:
-        """
-        同意群申请
-        注意：此功能需要平台适配器支持群管理操作
-        """
-        try:
-            # 调用平台适配器的同意方法
-            # 具体方法名可能因平台而异，以下为示例
-            if hasattr(self.context, 'approve_group_request'):
-                result = await self.context.approve_group_request(
-                    group_id=group_id,
-                    user_id=user_id,
-                    request_id=request_id
-                )
-                return True
-            else:
-                self._log_action("当前平台适配器不支持同意群申请", None)
-                return False
-        except Exception as e:
-            self._log_action(f"同意申请失败: {str(e)}", None)
-            return False
-
-    async def _notify_applicant(self, user_id: str, message: str, event: AstrMessageEvent):
-        """向申请人发送通知"""
-        try:
-            # 构造私聊消息
-            await event.send(
-                target_id=user_id,
-                message_type="private",
-                message=message
-            )
-        except Exception as e:
-            self._log_action(f"通知申请人失败: {str(e)}", event)
-
-    async def _notify_admins(self, request_info: dict, event: AstrMessageEvent):
-        """通知管理员有新的申请需要审核"""
-        if not self._admin_user_ids:
-            self._log_action("未配置管理员用户ID，无法通知", event)
-            return
-
-        user_name = request_info.get("user_name", "未知用户")
-        user_id = request_info.get("user_id", "")
-        group_id = request_info.get("group_id", "")
-        reason = request_info.get("reason", "无申请理由")
-        request_id = request_info.get("request_id", "")
-
-        # 构造通知消息
-        notification_message = (
-            f"🔔 **新入群申请需审核**\n\n"
-            f"**申请人**: {user_name} (ID: {user_id})\n"
-            f"**申请群组**: {group_id}\n"
-            f"**申请理由**: {reason}\n"
-            f"**申请ID**: {request_id}\n\n"
-            f"请及时审核处理。"
+        # 初始化处理器
+        self.rule_handler = RuleHandler(self, self.config, self.storage, self.validator)
+        self.wb_handler = WhitelistBlacklistHandler(self, self.config, self.storage)
+        self.notification_manager = NotificationManager(self, self.config)
+        self.join_request_handler = GroupJoinRequestHandler(
+            self, self.config, self.storage, self.validator, self.notification_manager
         )
 
-        # 逐个通知管理员
-        for admin_id in self._admin_user_ids:
-            try:
-                await event.send(
-                    target_id=admin_id,
-                    message_type="private",
-                    message=notification_message
-                )
-                # 避免消息发送过快
-                await asyncio.sleep(0.5)
-            except Exception as e:
-                self._log_action(f"通知管理员 {admin_id} 失败: {str(e)}", event)
+        logger.info("[GroupAdminer] 插件已加载")
 
-    def _log_action(self, message: str, event: Optional[AstrMessageEvent] = None):
-        """记录操作日志"""
-        timestamp = int(asyncio.get_event_loop().time())
-        log_entry = f"[{timestamp}] {message}"
-        # 在实际插件中，应将日志写入文件或数据库
-        # 这里仅作为示例
-        # 注意：根据用户要求，不使用print
+    async def initialize(self):
+        """插件初始化"""
+        logger.info("[GroupAdminer] 插件初始化完成")
 
-    # 可选：提供管理员指令手动审核
-    @filter.command("approve")
-    @filter.permission_type(filter.PermissionType.ADMIN)
-    async def manual_approve(self, event: AstrMessageEvent, request_id: str):
-        """管理员手动同意申请"""
-        request_info = self._pending_requests.get(request_id)
-        if not request_info:
-            yield event.plain_result(f"未找到申请ID: {request_id}")
+    async def terminate(self):
+        """插件销毁"""
+        logger.info("[GroupAdminer] 插件已卸载")
+
+    # ==================== 指令组 ====================
+
+    @filter.command_group("ga")
+    async def ga(self):
+        """群管理器指令组"""
+        pass
+
+    # ==================== 规则管理指令 ====================
+
+    @ga.command("add")
+    async def ga_add(self, event: AstrMessageEvent, pattern: str = None):
+        """
+        添加关键词/正则表达式规则
+        用法: /ga add [关键词|正则表达式]
+        """
+        async for result in self.rule_handler.add_rule(event, pattern):
+            yield result
+
+    @ga.command("remove")
+    async def ga_remove(self, event: AstrMessageEvent, index: int = None):
+        """
+        删除指定索引的规则
+        用法: /ga remove [索引]
+        """
+        async for result in self.rule_handler.remove_rule(event, index):
+            yield result
+
+    @ga.command("list")
+    async def ga_list(self, event: AstrMessageEvent):
+        """
+        查看当前群的所有规则
+        用法: /ga list
+        """
+        async for result in self.rule_handler.list_rules(event):
+            yield result
+
+    @ga.command("clear")
+    async def ga_clear(self, event: AstrMessageEvent):
+        """
+        清空当前群的所有规则
+        用法: /ga clear
+        """
+        async for result in self.rule_handler.clear_rules(event):
+            yield result
+
+    @ga.command("test")
+    async def ga_test(self, event: AstrMessageEvent, test_text: str = None):
+        """
+        测试文本是否匹配当前群的规则
+        用法: /ga test [测试文本]
+        """
+        async for result in self.rule_handler.test_rule(event, test_text):
+            yield result
+
+    # ==================== 白名单指令 ====================
+
+    @ga.group("whitelist")
+    async def ga_whitelist(self):
+        """白名单管理指令组"""
+        pass
+
+    @ga_whitelist.command("add")
+    async def ga_whitelist_add(self, event: AstrMessageEvent, user_id: str = None):
+        """
+        添加用户到白名单
+        用法: /ga whitelist add [用户ID]
+        """
+        async for result in self.wb_handler.whitelist_add(event, user_id):
+            yield result
+
+    @ga_whitelist.command("remove")
+    async def ga_whitelist_remove(self, event: AstrMessageEvent, user_id: str = None):
+        """
+        从白名单移除用户
+        用法: /ga whitelist remove [用户ID]
+        """
+        async for result in self.wb_handler.whitelist_remove(event, user_id):
+            yield result
+
+    @ga_whitelist.command("list")
+    async def ga_whitelist_list(self, event: AstrMessageEvent):
+        """
+        查看白名单
+        用法: /ga whitelist list
+        """
+        async for result in self.wb_handler.whitelist_list(event):
+            yield result
+
+    # ==================== 黑名单指令 ====================
+
+    @ga.group("blacklist")
+    async def ga_blacklist(self):
+        """黑名单管理指令组"""
+        pass
+
+    @ga_blacklist.command("add")
+    async def ga_blacklist_add(self, event: AstrMessageEvent, user_id: str = None):
+        """
+        添加用户到黑名单
+        用法: /ga blacklist add [用户ID]
+        """
+        async for result in self.wb_handler.blacklist_add(event, user_id):
+            yield result
+
+    @ga_blacklist.command("remove")
+    async def ga_blacklist_remove(self, event: AstrMessageEvent, user_id: str = None):
+        """
+        从黑名单移除用户
+        用法: /ga blacklist remove [用户ID]
+        """
+        async for result in self.wb_handler.blacklist_remove(event, user_id):
+            yield result
+
+    @ga_blacklist.command("list")
+    async def ga_blacklist_list(self, event: AstrMessageEvent):
+        """
+        查看黑名单
+        用法: /ga blacklist list
+        """
+        async for result in self.wb_handler.blacklist_list(event):
+            yield result
+
+    # ==================== 帮助指令 ====================
+
+    @ga.command("help", alias={"帮助"})
+    async def ga_help(self, event: AstrMessageEvent):
+        """
+        显示帮助信息
+        用法: /ga help
+        """
+        yield event.plain_result(MessageBuilder.build_help_message())
+
+    # ==================== 测试指令 ====================
+
+    @ga.command("test_join")
+    async def ga_test_join(self, event: AstrMessageEvent, user_id: str = None, reason: str = None):
+        """
+        测试加群申请（模拟收到加群申请）
+        用法: /ga test_join [用户ID] [申请理由]
+        """
+        # 检查是否在群聊中
+        if not event.message_obj.group_id:
+            yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        group_id = request_info.get("group_id", "")
-        user_id = request_info.get("user_id", "")
+        # 检查参数
+        if user_id is None or reason is None:
+            yield event.plain_result(
+                MessageBuilder.error("请提供用户ID和申请理由\n\n用法: /ga test_join [用户ID] [申请理由]")
+            )
+            return
 
-        success = await self._approve_request(group_id, user_id, request_id)
-        if success:
-            del self._pending_requests[request_id]
-            yield event.plain_result(f"已手动同意申请 {request_id}")
+        # 检查管理员权限
+        if not is_admin(event, self.config):
+            yield event.plain_result(MessageBuilder.admin_required(event))
+            return
+
+        # 处理加群申请
+        group_id = event.message_obj.group_id
+        group_name = event.message_obj.group_id  # 这里使用群ID作为群名，实际应该获取群名称
+
+        approved, reason_msg = await self.join_request_handler.handle_join_request(
+            group_id=group_id,
+            group_name=group_name,
+            user_id=user_id,
+            user_name=user_id,
+            reason=reason,
+            event=event
+        )
+
+        # 返回测试结果
+        if approved:
+            yield event.plain_result(
+                MessageBuilder.success(
+                    f"测试加群申请通过\n\n"
+                    f"📝 用户ID: {user_id}\n"
+                    f"💬 申请理由: {reason}\n"
+                    f"✅ 结果: {reason_msg}\n\n"
+                    f"📢 已通知管理员"
+                )
+            )
         else:
-            yield event.plain_result(f"同意申请 {request_id} 失败")
-
-    @filter.command("reject")
-    @filter.permission_type(filter.PermissionType.ADMIN)
-    async def manual_reject(self, event: AstrMessageEvent, request_id: str):
-        """管理员手动拒绝申请"""
-        request_info = self._pending_requests.get(request_id)
-        if not request_info:
-            yield event.plain_result(f"未找到申请ID: {request_id}")
-            return
-
-        # 这里需要实现拒绝逻辑，具体方法因平台而异
-        try:
-            # 示例：调用平台适配器的拒绝方法
-            if hasattr(self.context, 'reject_group_request'):
-                await self.context.reject_group_request(
-                    group_id=request_info.get("group_id", ""),
-                    user_id=request_info.get("user_id", ""),
-                    request_id=request_id
+            yield event.plain_result(
+                MessageBuilder.warning(
+                    f"测试加群申请拒绝\n\n"
+                    f"📝 用户ID: {user_id}\n"
+                    f"💬 申请理由: {reason}\n"
+                    f"❌ 原因: {reason_msg}\n\n"
+                    f"📢 已通知管理员"
                 )
-            del self._pending_requests[request_id]
-            yield event.plain_result(f"已手动拒绝申请 {request_id}")
-        except Exception as e:
-            yield event.plain_result(f"拒绝申请失败: {str(e)}")
+            )
+
