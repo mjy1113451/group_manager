@@ -13,9 +13,9 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 
-from groupmanager.core import Config, Storage, Validator
-from groupmanager.handlers import RuleHandler, WhitelistBlacklistHandler
-from groupmanager.utils import MessageBuilder
+from group_manager.core import Config, Storage, Validator
+from group_manager.handlers import RuleHandler, WhitelistBlacklistHandler
+from group_manager.utils import MessageBuilder
 
 
 @register(
