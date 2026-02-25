@@ -295,4 +295,5 @@
 ## 🙏 致谢
 
 感谢 [AstrBot](https://github.com/AstrBotDevs/AstrBot) 提供的强大插件框架！
-
+##作者的插件群
+1079297679
