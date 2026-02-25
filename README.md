@@ -289,8 +289,8 @@
 
 ## 👨‍💻 开发者
 
-- **作者**: Kush-ShuL
-- **项目地址**: https://github.com/Kush-ShuL/GroupManager
+- **作者**: mjy1113451
+- **项目地址**: https://github.com/mjy1113451/group_manager
 
 ## 🙏 致谢
 
