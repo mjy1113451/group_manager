@@ -45,7 +45,7 @@ class GroupManager(Star):
         super().__init__(context)
 
         # 初始化核心组件
-        self.config = Config(self.get_config())
+        self.config = Config(self.context.get_config())
         self.storage = Storage(self)
         self.validator = Validator()
 
