@@ -4,8 +4,8 @@
 负责构建各种类型的精美消息。
 """
 
-from typing import List
-from astrbot.api.event import AstrMessageEvent, MessageEventResult
+from typing import List, Dict
+from astrbot.api.event import AstrMessageEvent
 from astrbot.api.message_components import At, Plain
 
 

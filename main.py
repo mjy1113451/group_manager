@@ -14,8 +14,8 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 
 from group_manager.core import Config, Storage, Validator
-from group_manager.handlers import RuleHandler, WhitelistBlacklistHandler
-from group_manager.utils import MessageBuilder
+from group_manager.handlers import RuleHandler, WhitelistBlacklistHandler, GroupJoinRequestHandler
+from group_manager.utils import MessageBuilder, NotificationManager
 
 
 @register(
@@ -41,9 +41,15 @@ class GroupManager(Star):
         self.storage = Storage(self)
         self.validator = Validator()
 
+        # 初始化通知管理器
+        self.notification_manager = NotificationManager(self, self.config)
+
         # 初始化处理器
         self.rule_handler = RuleHandler(self, self.config, self.storage, self.validator)
         self.wb_handler = WhitelistBlacklistHandler(self, self.config, self.storage)
+        self.join_request_handler = GroupJoinRequestHandler(
+            self, self.config, self.storage, self.validator, self.notification_manager
+        )
 
         logger.info("[GroupManager] 插件已加载")
 
@@ -180,70 +186,9 @@ class GroupManager(Star):
     # ==================== 帮助指令 ====================
 
     @gm.command("help", alias={"帮助"})
-    async def ga_help(self, event: AstrMessageEvent):
+    async def gm_help(self, event: AstrMessageEvent):
         """
         显示帮助信息
-        用法: /ga help
+        用法: /gm help
         """
         yield event.plain_result(MessageBuilder.build_help_message())
-
-    # ==================== 测试指令 ====================
-
-    @ga.command("test_join")
-    async def ga_test_join(self, event: AstrMessageEvent, user_id: str = None, reason: str = None):
-        """
-        测试加群申请（模拟收到加群申请）
-        用法: /ga test_join [用户ID] [申请理由]
-        """
-        # 检查是否在群聊中
-        if not event.message_obj.group_id:
-            yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
-            return
-
-        # 检查参数
-        if user_id is None or reason is None:
-            yield event.plain_result(
-                MessageBuilder.error("请提供用户ID和申请理由\n\n用法: /ga test_join [用户ID] [申请理由]")
-            )
-            return
-
-        # 检查管理员权限
-        if not is_admin(event, self.config):
-            yield event.plain_result(MessageBuilder.admin_required(event))
-            return
-
-        # 处理加群申请
-        group_id = event.message_obj.group_id
-        group_name = event.message_obj.group_id  # 这里使用群ID作为群名，实际应该获取群名称
-
-        approved, reason_msg = await self.join_request_handler.handle_join_request(
-            group_id=group_id,
-            group_name=group_name,
-            user_id=user_id,
-            user_name=user_id,
-            reason=reason,
-            event=event
-        )
-
-        # 返回测试结果
-        if approved:
-            yield event.plain_result(
-                MessageBuilder.success(
-                    f"测试加群申请通过\n\n"
-                    f"📝 用户ID: {user_id}\n"
-                    f"💬 申请理由: {reason}\n"
-                    f"✅ 结果: {reason_msg}\n\n"
-                    f"📢 已通知管理员"
-                )
-            )
-        else:
-            yield event.plain_result(
-                MessageBuilder.warning(
-                    f"测试加群申请拒绝\n\n"
-                    f"📝 用户ID: {user_id}\n"
-                    f"💬 申请理由: {reason}\n"
-                    f"❌ 原因: {reason_msg}\n\n"
-                    f"📢 已通知管理员"
-                )
-            )
-

@@ -8,8 +8,8 @@ from typing import Optional, List
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger
 
-from groupmanager.core import Config, Storage, Validator, ValidationResult
-from groupmanager.utils import NotificationManager
+from group_manager.core import Config, Storage, Validator, ValidationResult
+from group_manager.utils import NotificationManager
 
 
 class GroupJoinRequestHandler:

@@ -8,8 +8,8 @@ from typing import Optional
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger
 
-from groupmanager.core import Config, Storage
-from groupmanager.utils import MessageBuilder, is_admin
+from group_manager.core import Config, Storage
+from group_manager.utils import MessageBuilder, is_admin
 
 
 class WhitelistBlacklistHandler:

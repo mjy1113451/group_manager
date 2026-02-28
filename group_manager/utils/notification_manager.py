@@ -9,7 +9,7 @@ from astrbot.api.event import AstrMessageEvent
 from astrbot.api.star import Star
 from astrbot.api import logger
 
-from groupmanager.core import Config, ValidationResult
+from group_manager.core import Config, ValidationResult
 
 
 class NotificationManager:
