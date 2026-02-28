@@ -9,6 +9,14 @@ Version: v1.0.0
 License: AGPL-v3
 """
 
+import pathlib
+import sys
+
+# 添加插件目录到 Python 路径
+plugin_dir = pathlib.Path(__file__).parent
+if str(plugin_dir) not in sys.path:
+    sys.path.insert(0, str(plugin_dir))
+
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
