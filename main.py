@@ -27,7 +27,7 @@ from gm_core.utils import MessageBuilder, NotificationManager
 
 
 @register(
-    "groupManager",
+    "astrbot_plugin_groupManager",
     "Kush-ShuL",
     "智能群管理插件 - 支持正则表达式/关键词/白名单/黑名单验证加群申请",
     "v1.0.0"
