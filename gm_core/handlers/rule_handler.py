@@ -8,8 +8,8 @@ from typing import Optional
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger
 
-from gm_core.core import Config, Storage, Validator, RuleType
-from gm_core.utils import MessageBuilder, is_admin
+from ..core import Config, Storage, Validator, RuleType
+from ..utils import MessageBuilder, is_admin
 
 
 class RuleHandler:
