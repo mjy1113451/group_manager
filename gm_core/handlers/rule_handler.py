@@ -30,20 +30,6 @@ class RuleHandler:
         self.storage = storage
         self.validator = validator
 
-    def _check_group_managed(self, group_id: str) -> Optional[str]:
-        """
-        检查群是否在管理列表中
-
-        Args:
-            group_id: 群ID
-
-        Returns:
-            如果群不在管理列表中返回错误消息，否则返回 None
-        """
-        if not self.config.is_group_managed(group_id):
-            return "此群未配置群管理功能，请联系管理员配置"
-        return None
-
     async def add_rule(self, event: AstrMessageEvent, pattern: Optional[str] = None):
         """
         添加关键词/正则表达式规则
@@ -57,20 +43,17 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        group_id = event.message_obj.group_id
-
-        # 检查群是否在管理列表中
-        error_msg = self._check_group_managed(group_id)
-        if error_msg:
-            yield event.plain_result(MessageBuilder.error(error_msg))
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
             return
 
         # 检查参数
         if pattern is None:
             yield event.plain_result(
                 MessageBuilder.error("请提供关键词或正则表达式\n\n"
-                                    "用法: /ga add [关键词|正则表达式]\n"
-                                    "正则表达式请使用 // 包裹，例如: /ga add /\\d{11}/")
+                                    "用法: /gm add [关键词|正则表达式]\n"
+                                    "正则表达式请使用 // 包裹，例如: /gm add /\\d{11}/")
             )
             return
 
@@ -142,18 +125,15 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        group_id = event.message_obj.group_id
-
-        # 检查群是否在管理列表中
-        error_msg = self._check_group_managed(group_id)
-        if error_msg:
-            yield event.plain_result(MessageBuilder.error(error_msg))
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
             return
 
         # 检查参数
         if index is None:
             yield event.plain_result(
-                MessageBuilder.error("请提供要删除的规则索引\n\n用法: /ga remove [索引]")
+                MessageBuilder.error("请提供要删除的规则索引\n\n用法: /gm remove [索引]")
             )
             return
 
@@ -213,25 +193,23 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        group_id = event.message_obj.group_id
-
-        # 检查群是否在管理列表中
-        error_msg = self._check_group_managed(group_id)
-        if error_msg:
-            yield event.plain_result(MessageBuilder.error(error_msg))
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
             return
 
         # 获取当前群的规则列表
+        group_id = event.message_obj.group_id
         group_rules = await self.storage.get_group_rules(group_id)
 
-        # 构建规则列表消息（简化格式）
+        # 构建规则列表消息
         if not group_rules:
             yield event.plain_result(
                 MessageBuilder.warning("当前群没有任何规则\n\n"
                                       "💡 使用 /gm add [关键词|正则表达式] 添加规则")
             )
         else:
-            yield event.plain_result(MessageBuilder.build_rules_list(group_rules, simplified=True))
+            yield event.plain_result(MessageBuilder.build_rules_list(group_rules))
 
     async def clear_rules(self, event: AstrMessageEvent):
         """
@@ -245,12 +223,9 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        group_id = event.message_obj.group_id
-
-        # 检查群是否在管理列表中
-        error_msg = self._check_group_managed(group_id)
-        if error_msg:
-            yield event.plain_result(MessageBuilder.error(error_msg))
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
             return
 
         # 检查管理员权限
@@ -259,6 +234,7 @@ class RuleHandler:
             return
 
         # 获取当前群的规则列表
+        group_id = event.message_obj.group_id
         group_rules = await self.storage.get_group_rules(group_id)
 
         if not group_rules:
@@ -293,12 +269,9 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        group_id = event.message_obj.group_id
-
-        # 检查群是否在管理列表中
-        error_msg = self._check_group_managed(group_id)
-        if error_msg:
-            yield event.plain_result(MessageBuilder.error(error_msg))
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
             return
 
         # 检查参数
@@ -309,12 +282,13 @@ class RuleHandler:
             return
 
         # 获取当前群的规则列表
+        group_id = event.message_obj.group_id
         group_rules = await self.storage.get_group_rules(group_id)
 
         if not group_rules:
             yield event.plain_result(
                 MessageBuilder.warning("当前群没有任何规则\n\n"
-                                      "💡 使用 /ga add [关键词|正则表达式] 添加规则")
+                                      "💡 使用 /gm add [关键词|正则表达式] 添加规则")
             )
             return
 
