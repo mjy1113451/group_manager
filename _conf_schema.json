@@ -1,4 +1,10 @@
 {
+  "enabled_groups": {
+    "description": "启用的群ID列表",
+    "type": "list",
+    "hint": "启用群管理功能的群ID列表。留空则所有群都启用。",
+    "default": []
+  },
   "admin_list": {
     "description": "管理员ID列表",
     "type": "list",

@@ -95,21 +95,10 @@ class MessageBuilder:
         if not rules:
             return MessageBuilder.warning("当前群没有任何规则")
 
-        message_parts = [
-            "📋 当前群规则列表\n",
-            "=" * 40 + "\n"
-        ]
+        message_parts = ["群规则："]
 
-        for idx, rule in enumerate(rules, 1):
-            rule_type = "🔍 正则" if rule["type"] == "regex" else "🔑 关键词"
-            message_parts.append(f"{idx}. {rule_type}\n")
-            message_parts.append(f"   内容: {rule['content']}\n")
-            message_parts.append(f"   创建者: {rule['created_by']}\n")
-            message_parts.append(f"   时间: {rule['created_at']}\n")
-            message_parts.append("-" * 40 + "\n")
-
-        message_parts.append(f"📊 总计: {len(rules)} 条规则")
-        message_parts.append(f"\n💡 使用 /gm remove [索引] 删除规则")
+        for rule in rules:
+            message_parts.append(f"\n{rule['content']}")
 
         return "".join(message_parts)
 

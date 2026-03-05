@@ -8,8 +8,8 @@ from typing import Optional
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger
 
-from gm_core.core import Config, Storage
-from gm_core.utils import MessageBuilder, is_admin
+from ..core import Config, Storage
+from ..utils import MessageBuilder, is_admin
 
 
 class WhitelistBlacklistHandler:
@@ -41,10 +41,15 @@ class WhitelistBlacklistHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 检查参数
         if user_id is None:
             yield event.plain_result(
-                MessageBuilder.error("请提供用户ID\n\n用法: /ga whitelist add [用户ID]")
+                MessageBuilder.error("请提供用户ID\n\n用法: /gm whitelist add [用户ID]")
             )
             return
 
@@ -86,10 +91,15 @@ class WhitelistBlacklistHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 检查参数
         if user_id is None:
             yield event.plain_result(
-                MessageBuilder.error("请提供用户ID\n\n用法: /ga whitelist remove [用户ID]")
+                MessageBuilder.error("请提供用户ID\n\n用法: /gm whitelist remove [用户ID]")
             )
             return
 
@@ -130,6 +140,11 @@ class WhitelistBlacklistHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 获取白名单
         group_id = event.message_obj.group_id
         whitelist = await self.storage.get_group_whitelist(group_id)
@@ -150,10 +165,15 @@ class WhitelistBlacklistHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 检查参数
         if user_id is None:
             yield event.plain_result(
-                MessageBuilder.error("请提供用户ID\n\n用法: /ga blacklist add [用户ID]")
+                MessageBuilder.error("请提供用户ID\n\n用法: /gm blacklist add [用户ID]")
             )
             return
 
@@ -195,10 +215,15 @@ class WhitelistBlacklistHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 检查参数
         if user_id is None:
             yield event.plain_result(
-                MessageBuilder.error("请提供用户ID\n\n用法: /ga blacklist remove [用户ID]")
+                MessageBuilder.error("请提供用户ID\n\n用法: /gm blacklist remove [用户ID]")
             )
             return
 
@@ -237,6 +262,11 @@ class WhitelistBlacklistHandler:
         # 检查是否在群聊中
         if not event.message_obj.group_id:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
+            return
+
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
             return
 
         # 获取黑名单
