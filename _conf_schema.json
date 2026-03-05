@@ -1,4 +1,10 @@
 {
+  "managed_groups": {
+    "description": "管理的群ID列表",
+    "type": "list",
+    "hint": "只有列表中的群才能使用群管理功能。留空则所有群都可使用。",
+    "default": []
+  },
   "admin_list": {
     "description": "管理员ID列表",
     "type": "list",

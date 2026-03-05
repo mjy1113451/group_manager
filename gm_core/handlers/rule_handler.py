@@ -30,6 +30,20 @@ class RuleHandler:
         self.storage = storage
         self.validator = validator
 
+    def _check_group_managed(self, group_id: str) -> Optional[str]:
+        """
+        检查群是否在管理列表中
+
+        Args:
+            group_id: 群ID
+
+        Returns:
+            如果群不在管理列表中返回错误消息，否则返回 None
+        """
+        if not self.config.is_group_managed(group_id):
+            return "此群未配置群管理功能，请联系管理员配置"
+        return None
+
     async def add_rule(self, event: AstrMessageEvent, pattern: Optional[str] = None):
         """
         添加关键词/正则表达式规则
@@ -41,6 +55,14 @@ class RuleHandler:
         # 检查是否在群聊中
         if not event.message_obj.group_id:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
+            return
+
+        group_id = event.message_obj.group_id
+
+        # 检查群是否在管理列表中
+        error_msg = self._check_group_managed(group_id)
+        if error_msg:
+            yield event.plain_result(MessageBuilder.error(error_msg))
             return
 
         # 检查参数
@@ -120,6 +142,14 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        group_id = event.message_obj.group_id
+
+        # 检查群是否在管理列表中
+        error_msg = self._check_group_managed(group_id)
+        if error_msg:
+            yield event.plain_result(MessageBuilder.error(error_msg))
+            return
+
         # 检查参数
         if index is None:
             yield event.plain_result(
@@ -183,18 +213,25 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        # 获取当前群的规则列表
         group_id = event.message_obj.group_id
+
+        # 检查群是否在管理列表中
+        error_msg = self._check_group_managed(group_id)
+        if error_msg:
+            yield event.plain_result(MessageBuilder.error(error_msg))
+            return
+
+        # 获取当前群的规则列表
         group_rules = await self.storage.get_group_rules(group_id)
 
-        # 构建规则列表消息
+        # 构建规则列表消息（简化格式）
         if not group_rules:
             yield event.plain_result(
                 MessageBuilder.warning("当前群没有任何规则\n\n"
-                                      "💡 使用 /ga add [关键词|正则表达式] 添加规则")
+                                      "💡 使用 /gm add [关键词|正则表达式] 添加规则")
             )
         else:
-            yield event.plain_result(MessageBuilder.build_rules_list(group_rules))
+            yield event.plain_result(MessageBuilder.build_rules_list(group_rules, simplified=True))
 
     async def clear_rules(self, event: AstrMessageEvent):
         """
@@ -208,13 +245,20 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        group_id = event.message_obj.group_id
+
+        # 检查群是否在管理列表中
+        error_msg = self._check_group_managed(group_id)
+        if error_msg:
+            yield event.plain_result(MessageBuilder.error(error_msg))
+            return
+
         # 检查管理员权限
         if not is_admin(event, self.config):
             yield event.plain_result(MessageBuilder.admin_required(event))
             return
 
         # 获取当前群的规则列表
-        group_id = event.message_obj.group_id
         group_rules = await self.storage.get_group_rules(group_id)
 
         if not group_rules:
@@ -249,15 +293,22 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        group_id = event.message_obj.group_id
+
+        # 检查群是否在管理列表中
+        error_msg = self._check_group_managed(group_id)
+        if error_msg:
+            yield event.plain_result(MessageBuilder.error(error_msg))
+            return
+
         # 检查参数
         if test_text is None:
             yield event.plain_result(
-                MessageBuilder.error("请提供测试文本\n\n用法: /ga test [测试文本]")
+                MessageBuilder.error("请提供测试文本\n\n用法: /gm test [测试文本]")
             )
             return
 
         # 获取当前群的规则列表
-        group_id = event.message_obj.group_id
         group_rules = await self.storage.get_group_rules(group_id)
 
         if not group_rules:

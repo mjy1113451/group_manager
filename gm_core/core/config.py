@@ -30,6 +30,30 @@ class Config:
         return self.config_dict.get("admin_list", [])
 
     @property
+    def managed_groups(self) -> List[str]:
+        """
+        获取管理的群ID列表
+
+        Returns:
+            群ID列表，如果未配置则返回空列表（表示所有群都可使用）
+        """
+        return self.config_dict.get("managed_groups", [])
+
+    def is_group_managed(self, group_id: str) -> bool:
+        """
+        检查群是否在管理列表中
+
+        Args:
+            group_id: 群ID
+
+        Returns:
+            如果群在管理列表中返回 True，如果列表为空则返回 True（表示管理所有群）
+        """
+        if not self.managed_groups:
+            return True
+        return group_id in self.managed_groups
+
+    @property
     def default_mode(self) -> str:
         """
         获取默认模式

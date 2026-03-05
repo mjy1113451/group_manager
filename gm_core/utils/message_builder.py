@@ -82,18 +82,23 @@ class MessageBuilder:
         )
 
     @staticmethod
-    def build_rules_list(rules: List[Dict]) -> str:
+    def build_rules_list(rules: List[Dict], simplified: bool = False) -> str:
         """
         构建规则列表消息
 
         Args:
             rules: 规则列表
+            simplified: 是否使用简化格式
 
         Returns:
             格式化后的规则列表
         """
         if not rules:
             return MessageBuilder.warning("当前群没有任何规则")
+
+        if simplified:
+            keywords = [rule["content"] for rule in rules]
+            return "群规则：" + ", ".join(keywords)
 
         message_parts = [
             "📋 当前群规则列表\n",
