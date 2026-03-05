@@ -1,13 +1,4 @@
-"""
-GroupManager - 智能群管理插件
 
-一个强大的 AstrBot 群管理插件，支持通过正则表达式、关键词、
-白名单和黑名单验证加群申请。
-
-Author: Kush-ShuL
-Version: v1.0.0
-License: AGPL-v3
-"""
 
 import pathlib
 import sys
@@ -27,8 +18,8 @@ from gm_core.utils import MessageBuilder, NotificationManager
 
 
 @register(
-    "astrbot_plugin_groupManager",
-    "Kush-ShuL",
+    "astrbot_plugin_group_manager",
+    "mjy1113451",
     "智能群管理插件 - 支持正则表达式/关键词/白名单/黑名单验证加群申请",
     "v1.0.0"
 )
