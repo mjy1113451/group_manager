@@ -8,8 +8,8 @@ from typing import Optional
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger
 
-from gm_core.core import Config, Storage, Validator, RuleType
-from gm_core.utils import MessageBuilder, is_admin
+from ..core import Config, Storage, Validator, RuleType
+from ..utils import MessageBuilder, is_admin
 
 
 class RuleHandler:
@@ -43,12 +43,17 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 检查参数
         if pattern is None:
             yield event.plain_result(
                 MessageBuilder.error("请提供关键词或正则表达式\n\n"
-                                    "用法: /ga add [关键词|正则表达式]\n"
-                                    "正则表达式请使用 // 包裹，例如: /ga add /\\d{11}/")
+                                    "用法: /gm add [关键词|正则表达式]\n"
+                                    "正则表达式请使用 // 包裹，例如: /gm add /\\d{11}/")
             )
             return
 
@@ -120,10 +125,24 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 检查参数
         if index is None:
             yield event.plain_result(
-                MessageBuilder.error("请提供要删除的规则索引\n\n用法: /ga remove [索引]")
+                MessageBuilder.error("请提供要删除的规则索引\n\n用法: /gm remove [索引]")
+            )
+            return
+
+        # 转换索引为整数
+        try:
+            index = int(index)
+        except (ValueError, TypeError):
+            yield event.plain_result(
+                MessageBuilder.error("索引必须是数字\n\n用法: /gm remove [索引]")
             )
             return
 
@@ -183,6 +202,11 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 获取当前群的规则列表
         group_id = event.message_obj.group_id
         group_rules = await self.storage.get_group_rules(group_id)
@@ -191,7 +215,7 @@ class RuleHandler:
         if not group_rules:
             yield event.plain_result(
                 MessageBuilder.warning("当前群没有任何规则\n\n"
-                                      "💡 使用 /ga add [关键词|正则表达式] 添加规则")
+                                      "💡 使用 /gm add [关键词|正则表达式] 添加规则")
             )
         else:
             yield event.plain_result(MessageBuilder.build_rules_list(group_rules))
@@ -206,6 +230,11 @@ class RuleHandler:
         # 检查是否在群聊中
         if not event.message_obj.group_id:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
+            return
+
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
             return
 
         # 检查管理员权限
@@ -249,10 +278,15 @@ class RuleHandler:
             yield event.plain_result(MessageBuilder.error("此指令仅限群聊使用"))
             return
 
+        # 检查群是否启用
+        if not self.config.is_group_enabled(event.message_obj.group_id):
+            yield event.plain_result(MessageBuilder.error("当前群未启用群管理功能"))
+            return
+
         # 检查参数
         if test_text is None:
             yield event.plain_result(
-                MessageBuilder.error("请提供测试文本\n\n用法: /ga test [测试文本]")
+                MessageBuilder.error("请提供测试文本\n\n用法: /gm test [测试文本]")
             )
             return
 
@@ -263,7 +297,7 @@ class RuleHandler:
         if not group_rules:
             yield event.plain_result(
                 MessageBuilder.warning("当前群没有任何规则\n\n"
-                                      "💡 使用 /ga add [关键词|正则表达式] 添加规则")
+                                      "💡 使用 /gm add [关键词|正则表达式] 添加规则")
             )
             return
 

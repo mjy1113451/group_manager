@@ -5,7 +5,7 @@
 """
 
 from astrbot.api.event import AstrMessageEvent
-from gm_core.core import Config
+from ..core import Config
 
 
 def is_admin(event: AstrMessageEvent, config: Config) -> bool:

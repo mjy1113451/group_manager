@@ -1,20 +1,8 @@
 
 
-import pathlib
-import sys
-
-# 添加插件目录到 Python 路径
-plugin_dir = pathlib.Path(__file__).parent
-if str(plugin_dir) not in sys.path:
-    sys.path.insert(0, str(plugin_dir))
-
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
-
-from gm_core.core import Config, Storage, Validator
-from gm_core.handlers import RuleHandler, WhitelistBlacklistHandler, GroupJoinRequestHandler
-from gm_core.utils import MessageBuilder, NotificationManager
 
 
 @register(
@@ -35,15 +23,18 @@ class GroupManager(Star):
         """
         super().__init__(context)
 
-        # 初始化核心组件
+        from gm_core.core import Config, Storage, Validator
+        from gm_core.handlers import RuleHandler, WhitelistBlacklistHandler, GroupJoinRequestHandler
+        from gm_core.utils import MessageBuilder, NotificationManager
+
+        self.MessageBuilder = MessageBuilder
+
         self.config = Config(self.context.get_config())
         self.storage = Storage(self)
         self.validator = Validator()
 
-        # 初始化通知管理器
         self.notification_manager = NotificationManager(self, self.config)
 
-        # 初始化处理器
         self.rule_handler = RuleHandler(self, self.config, self.storage, self.validator)
         self.wb_handler = WhitelistBlacklistHandler(self, self.config, self.storage)
         self.join_request_handler = GroupJoinRequestHandler(
@@ -190,4 +181,4 @@ class GroupManager(Star):
         显示帮助信息
         用法: /gm help
         """
-        yield event.plain_result(MessageBuilder.build_help_message())
+        yield event.plain_result(self.MessageBuilder.build_help_message())

@@ -20,6 +20,31 @@ class Config:
         self.config_dict = config_dict or {}
 
     @property
+    def enabled_groups(self) -> List[str]:
+        """
+        获取启用的群ID列表
+
+        Returns:
+            启用的群ID列表，如果未配置则返回空列表（表示所有群都启用）
+        """
+        return self.config_dict.get("enabled_groups", [])
+
+    def is_group_enabled(self, group_id: str) -> bool:
+        """
+        检查群是否启用群管理功能
+
+        Args:
+            group_id: 群ID
+
+        Returns:
+            如果群启用返回 True，否则返回 False
+            如果未配置启用群列表，则所有群都启用
+        """
+        if not self.enabled_groups:
+            return True
+        return str(group_id) in [str(g) for g in self.enabled_groups]
+
+    @property
     def admin_list(self) -> List[str]:
         """
         获取管理员ID列表
