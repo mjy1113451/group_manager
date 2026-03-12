@@ -2,6 +2,10 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 
+from .gm_core.core import Config, Storage, Validator
+from .gm_core.handlers import RuleHandler, WhitelistBlacklistHandler, GroupJoinRequestHandler
+from .gm_core.utils import MessageBuilder, NotificationManager, is_admin
+
 
 @register("astrbot_plugin_group_manager", "mjy1113451", "智能群管理插件 - 支持正则表达式/关键词/白名单/黑名单验证加群申请", "v1.1.0")
 class GroupManager(Star):
@@ -10,18 +14,12 @@ class GroupManager(Star):
     def __init__(self, context: Context, config: dict = None):
         super().__init__(context)
 
-        from gm_core.core import Config, Storage, Validator
-        from gm_core.handlers import RuleHandler, WhitelistBlacklistHandler, GroupJoinRequestHandler
-        from gm_core.utils import MessageBuilder, NotificationManager
-
         self.MessageBuilder = MessageBuilder
 
-        # Config 直接传入 context，自动同步配置变更
         self.config = Config(self.context)
         self.storage = Storage(self)
         self.validator = Validator()
 
-        # NotificationManager 需要 storage 以获取群独立管理员列表
         self.notification_manager = NotificationManager(self, self.config, self.storage)
 
         self.rule_handler = RuleHandler(self, self.config, self.storage, self.validator)
@@ -99,7 +97,6 @@ class GroupManager(Star):
             )
             return
 
-        from gm_core.utils import is_admin
         if not await is_admin(event, self.storage):
             yield event.plain_result(self.MessageBuilder.admin_required(event))
             return
@@ -134,7 +131,6 @@ class GroupManager(Star):
             )
             return
 
-        from gm_core.utils import is_admin
         if not await is_admin(event, self.storage):
             yield event.plain_result(self.MessageBuilder.admin_required(event))
             return
@@ -176,7 +172,6 @@ class GroupManager(Star):
             yield event.plain_result(self.MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        from gm_core.utils import is_admin
         if not await is_admin(event, self.storage):
             yield event.plain_result(self.MessageBuilder.admin_required(event))
             return
@@ -199,7 +194,6 @@ class GroupManager(Star):
             yield event.plain_result(self.MessageBuilder.error("此指令仅限群聊使用"))
             return
 
-        from gm_core.utils import is_admin
         if not await is_admin(event, self.storage):
             yield event.plain_result(self.MessageBuilder.admin_required(event))
             return
