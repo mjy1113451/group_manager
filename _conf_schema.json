@@ -1,0 +1,61 @@
+{
+  "default_mode": {
+    "description": "默认模式",
+    "type": "string",
+    "hint": "当群没有配置规则时的默认处理方式（全局默认值，各群可独立覆盖）",
+    "options": ["allow", "reject"],
+    "default": "allow"
+  },
+  "enable_logging": {
+    "description": "启用日志",
+    "type": "bool",
+    "hint": "是否记录加群申请的验证日志",
+    "default": true
+  },
+  "whitelist_priority": {
+    "description": "白名单优先级",
+    "type": "bool",
+    "hint": "白名单用户是否绕过规则验证直接通过",
+    "default": true
+  },
+  "blacklist_priority": {
+    "description": "黑名单优先级",
+    "type": "bool",
+    "hint": "黑名单用户是否直接拒绝，即使匹配规则",
+    "default": true
+  },
+  "enable_admin_notification": {
+    "description": "启用管理员通知",
+    "type": "bool",
+    "hint": "收到加群申请时是否通知管理员",
+    "default": true
+  },
+  "admin_notification_platform": {
+    "description": "管理员通知平台",
+    "type": "string",
+    "hint": "通知管理员的平台类型（qq、telegram、discord等）",
+    "default": "qq"
+  },
+  "admin_notification_messages": {
+    "description": "通知消息模板",
+    "type": "object",
+    "hint": "自定义通知消息模板",
+    "items": {
+      "request_received": {
+        "description": "收到申请消息",
+        "type": "string",
+        "default": "📢 收到新的加群申请\n\n群组: {group_name}\n申请人: {user_name}({user_id})\n申请理由: {reason}\n\n验证结果: {result}"
+      },
+      "request_approved": {
+        "description": "申请通过消息",
+        "type": "string",
+        "default": "✅ 加群申请已通过\n\n群组: {group_name}\n申请人: {user_name}({user_id})"
+      },
+      "request_rejected": {
+        "description": "申请拒绝消息",
+        "type": "string",
+        "default": "❌ 加群申请已拒绝\n\n群组: {group_name}\n申请人: {user_name}({user_id})\n原因: {reason}"
+      }
+    }
+  }
+}
